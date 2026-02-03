@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400">
+  <rect width="1200" height="400" fill="#0b0f1a"/>
+  <text x="60" y="120" fill="#ff4d4d" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="72">SecurityClaw</text>
+  <text x="60" y="200" fill="#ffd6d6" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="28">🦞 Security-first OpenClaw skill scanning + quarantine</text>
+  <text x="60" y="260" fill="#9fb3c8" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="20">No silent trust. No silent side effects. Quarantine > delete.</text>
+  <text x="60" y="320" fill="#ff9f9f" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="20">Pinch attacks: prompt injection • exfiltration • supply chain • tool abuse</text>
+</svg>
