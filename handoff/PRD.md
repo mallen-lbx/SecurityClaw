@@ -57,11 +57,17 @@ We need a **security-first skill auditing and quarantine system** that protects 
 - Store allowlist in a safe location (outside skill directories).
 
 ### R5. Optional dynamic analysis (Phase 2)
-- Run the skill in a sandboxed runner:
+- Run the skill in a sandboxed runner **only with explicit owner approval**:
   - no network
   - no access to `~/.openclaw/openclaw.json`, secrets, or real tools
   - log tool calls and filesystem touches
 - Produce behavioral indicators.
+
+### R6. Explicit approval for installs/bootstrap
+- If SecurityClaw needs Docker/Portainer/other dependencies, it must:
+  1) explain exactly what it will install/change,
+  2) request explicit owner approval,
+  3) proceed only after approval.
 
 ## Success metrics
 - % of new skills scanned before use.

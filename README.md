@@ -40,7 +40,17 @@ python3 securityclaw_scan.py --help
 - **Assume untrusted input**: skills, markdown, and JSON are attacker-controlled.
 - **Least privilege**: scans are read-only by default.
 - **Quarantine > delete**: deletion requires explicit owner approval.
+- **No surprises**: any install/bootstrap actions (Docker, Portainer, etc.) require **explicit owner approval**.
 - **Defense in depth**: static checks + optional sandbox/dynamic checks.
+
+## Recommended usage (best UX)
+
+Run SecurityClaw **via chat** (owner ↔ bot) so the bot can:
+- explain findings in plain English,
+- ask follow-up questions,
+- and present the owner action menu (**Delete / Report / Allow / Scan all**) with clear previews.
+
+Avoid running destructive actions from scripts without a human in the loop.
 
 ---
 
