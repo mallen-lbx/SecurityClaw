@@ -1,6 +1,23 @@
 # SecurityClaw
 
+[![Quick Install](https://img.shields.io/badge/Quick%20Install-npx%20github%3Amallen--lbx%2FSecurityClaw%20install-2ea44f?style=for-the-badge)](https://github.com/mallen-lbx/SecurityClaw)
+
 SecurityClaw is a security-focused OpenClaw skill scanner. It inspects skills for risky patterns, scores findings, recommends actions (`allow`, `review`, `quarantine`), and supports continuous monitoring.
+
+## Quick Install
+
+Copy-paste one-shot install:
+
+```bash
+npx github:mallen-lbx/SecurityClaw install
+```
+
+Copy-paste global install:
+
+```bash
+npm i -g github:mallen-lbx/SecurityClaw
+securityclaw install
+```
 
 ## What SecurityClaw Does
 
