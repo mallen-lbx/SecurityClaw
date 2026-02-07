@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "skill": "example-safe-skill",
+      "hash": "<sha256-of-skill-folder>",
+      "rules": ["network_egress", "shell_exec"],
+      "expires": "2026-12-31",
+      "reason": "Owner approved controlled tool usage"
+    },
+    {
+      "skill": "example-trusted-internal-skill",
+      "hash": "",
+      "rules": ["*"],
+      "expires": "",
+      "reason": "Trusted internal baseline"
+    }
+  ]
+}

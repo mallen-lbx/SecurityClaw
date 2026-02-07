@@ -1,0 +1,28 @@
+{
+  "name": "securityclaw-openclaw-skill",
+  "version": "0.1.0",
+  "description": "Security-first OpenClaw skill scanner with quarantine, notifications, and auto-scan scheduling",
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mallen-lbx/SecurityClaw.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mallen-lbx/SecurityClaw/issues"
+  },
+  "homepage": "https://github.com/mallen-lbx/SecurityClaw#readme",
+  "bin": {
+    "securityclaw": "bin/securityclaw.js",
+    "securityclaw-install": "bin/securityclaw.js"
+  },
+  "files": [
+    "bin/",
+    "skills/securityclaw-skill/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

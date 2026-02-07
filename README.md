@@ -24,9 +24,8 @@ When a suspicious or infected skill is detected, SecurityClaw’s workflow is:
 ## What’s in this repo
 
 - `skills/securityclaw-skill/` — OpenClaw skill package (SKILL.md + scripts)
-- `src/` — reusable library code (scanner rules, report generator)
 - `handoff/` — PRD/spec + handoff prompts for Claude/Codex/Gemini
-- `docs/` — additional design notes (kept out of the skill to avoid token bloat)
+- `docs/plans/` — implementation plans and execution checklists
 
 ## Quickstart (developer)
 
@@ -34,6 +33,70 @@ When a suspicious or infected skill is detected, SecurityClaw’s workflow is:
 cd skills/securityclaw-skill/scripts
 python3 securityclaw_scan.py --help
 ```
+
+Install persistent auto-scan scheduler:
+
+```bash
+python3 install_securityclaw.py --skills-dir ~/.openclaw/skills --notify-config ~/.openclaw/securityclaw-notify.json
+```
+
+Install from GitHub via npm (public):
+
+```bash
+npx github:mallen-lbx/SecurityClaw install
+```
+
+Alternative:
+
+```bash
+npm i -g github:mallen-lbx/SecurityClaw
+securityclaw install
+```
+
+Installer behavior:
+
+- macOS: sets up `launchd` (`com.openclaw.securityclaw.watch`)
+- Linux: sets up `systemd --user` (`securityclaw-watch.service`)
+- Linux without `systemd`: installer warns, shows install command, and offers automatic install
+
+Example scan:
+
+```bash
+python3 securityclaw_scan.py --skills-dir ~/.openclaw/skills
+```
+
+Reports are auto-saved to:
+
+- `~/.openclaw/SecurityClaw_Scans`
+- naming format: `Security_Scan-(MM)-(DD)-(YYYY)-(scan number)` (example: `Security_Scan-02-06-2026-001.json`)
+- quarantine ELI5 summary: `Security_Scan-...-ELI5.md` (created when quarantine candidates exist)
+
+Optional known-safe suppression:
+
+```bash
+python3 securityclaw_scan.py --skills-dir ~/.openclaw/skills --allowlist ~/.openclaw/securityclaw-allowlist.json
+```
+
+Notification summary (Telegram/webhook/stdout):
+
+```bash
+python3 securityclaw_scan.py --skills-dir ~/.openclaw/skills --notify-config ~/.openclaw/securityclaw-notify.json --notify-on quarantine
+```
+
+Auto-scan new/changed skills:
+
+```bash
+python3 securityclaw_scan.py --skills-dir ~/.openclaw/skills --watch --watch-scan-on-start
+```
+
+When quarantine candidates are detected, the Markdown report includes a quarantine-evidence section with 4 proof findings per skill.
+In auto-scan mode, report docs are only written when findings require review/quarantine.
+When a new skill is scanned in auto mode, notifications are always sent.
+
+Monthly scan logs:
+
+- location: `~/.openclaw/SecurityClaw_Scans/Scan_Logs/<Month>.log`
+- line format: `scan completed 04-06-26 12:00:00`
 
 ## Design principles (security)
 
@@ -57,4 +120,3 @@ Avoid running destructive actions from scripts without a human in the loop.
 ## Lobster law 🦞
 
 If it can pinch your tokens, it can pinch your secrets.
-
