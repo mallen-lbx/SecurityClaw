@@ -1,5 +1,7 @@
 # SecurityClaw
 
+![SecurityClaw Banner](assets/lobster.svg)
+
 [![Quick Install](https://img.shields.io/badge/Quick%20Install-npx%20github%3Amallen--lbx%2FSecurityClaw%20install-2ea44f?style=for-the-badge)](https://github.com/mallen-lbx/SecurityClaw)
 
 SecurityClaw is a security-focused OpenClaw skill scanner. It inspects skills for risky patterns, scores findings, recommends actions (`allow`, `review`, `quarantine`), and supports continuous monitoring.
@@ -21,13 +23,19 @@ securityclaw install
 
 ## What SecurityClaw Does
 
-- Scans OpenClaw skills for command execution, network egress, prompt injection markers, sensitive path usage, and install-hook risk indicators.
+- Scans OpenClaw third-party/custom skills for command execution, network egress, prompt injection markers, sensitive path usage, and install-hook risk indicators.
 - Produces evidence-based reports with file/line proof.
 - Creates an ELI5 removal summary when quarantine candidates exist.
 - Supports owner-driven decisions: `Delete`, `Report`, `Allow`, `Scan all`.
 - Sends notifications (Telegram, webhook, or stdout fallback).
 - Watches for new/changed skills and scans automatically.
 - Maintains monthly scan logs.
+- SecurityClaw itself should be omitted from routine target-skill testing scope to avoid self-referential scanner hits.
+
+## Scan Scope Recommendation
+
+For normal security reviews, scan the skills you want to audit and exclude `securityclaw-skill` from your target test set.  
+If `securityclaw-skill` is in the same directory, allowlist it in `~/.openclaw/securityclaw-allowlist.json` for routine scans.
 
 ## Install (Public GitHub via npm)
 
