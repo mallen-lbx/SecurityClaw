@@ -1,122 +1,241 @@
-# SecurityClaw 🦞
+# SecurityClaw
 
-SecurityClaw is a **security-first skill + toolkit** for OpenClaw that audits installed skills for:
+SecurityClaw is a security-focused OpenClaw skill scanner. It inspects skills for risky patterns, scores findings, recommends actions (`allow`, `review`, `quarantine`), and supports continuous monitoring.
 
-- malicious behavior / exploit patterns
-- prompt injection payloads embedded in docs
-- secret exfiltration and unsafe tool usage
-- risky install scripts / supply-chain issues
+## What SecurityClaw Does
 
-When a suspicious or infected skill is detected, SecurityClaw’s workflow is:
+- Scans OpenClaw skills for command execution, network egress, prompt injection markers, sensitive path usage, and install-hook risk indicators.
+- Produces evidence-based reports with file/line proof.
+- Creates an ELI5 removal summary when quarantine candidates exist.
+- Supports owner-driven decisions: `Delete`, `Report`, `Allow`, `Scan all`.
+- Sends notifications (Telegram, webhook, or stdout fallback).
+- Watches for new/changed skills and scans automatically.
+- Maintains monthly scan logs.
 
-1) **Quarantine** the skill (move it out of the active skills directory)
-2) Generate a **forensic report** (what matched, where, why it’s risky)
-3) **Notify the owner** and await explicit instruction:
-   - **Delete** (remove quarantined files)
-   - **Report** (open an issue / publish IOCs)
-   - **Allow** (add to allowlist and restore)
-   - **Scan all** (deep scan all skills)
+## Install (Public GitHub via npm)
 
-> Motto: **No silent side effects. No silent trust.**
+This repo is public and installable directly from GitHub.
 
----
-
-## What’s in this repo
-
-- `skills/securityclaw-skill/` — OpenClaw skill package (SKILL.md + scripts)
-- `handoff/` — PRD/spec + handoff prompts for Claude/Codex/Gemini
-- `docs/plans/` — implementation plans and execution checklists
-
-## Quickstart (developer)
-
-```bash
-cd skills/securityclaw-skill/scripts
-python3 securityclaw_scan.py --help
-```
-
-Install persistent auto-scan scheduler:
-
-```bash
-python3 install_securityclaw.py --skills-dir ~/.openclaw/skills --notify-config ~/.openclaw/securityclaw-notify.json
-```
-
-Install from GitHub via npm (public):
+### Option 1: One-shot install with npx
 
 ```bash
 npx github:mallen-lbx/SecurityClaw install
 ```
 
-Alternative:
+### Option 2: Global install then run
 
 ```bash
 npm i -g github:mallen-lbx/SecurityClaw
 securityclaw install
 ```
 
-Installer behavior:
+### What `securityclaw install` does
 
-- macOS: sets up `launchd` (`com.openclaw.securityclaw.watch`)
-- Linux: sets up `systemd --user` (`securityclaw-watch.service`)
-- Linux without `systemd`: installer warns, shows install command, and offers automatic install
+- Copies the skill to `~/.openclaw/skills/securityclaw-skill`.
+- Installs persistent auto-scan scheduler:
+  - macOS: `launchd` label `com.openclaw.securityclaw.watch`
+  - Linux: `systemd --user` service `securityclaw-watch.service`
+- If Linux scheduler dependency is missing, installer:
+  - warns during installation,
+  - shows an install command,
+  - offers to install it automatically.
 
-Example scan:
+## Manual Scanner Usage
+
+Run a one-time scan:
 
 ```bash
-python3 securityclaw_scan.py --skills-dir ~/.openclaw/skills
+securityclaw scan --skills-dir ~/.openclaw/skills
 ```
 
-Reports are auto-saved to:
+Equivalent direct Python command:
+
+```bash
+python3 ~/.openclaw/skills/securityclaw-skill/scripts/securityclaw_scan.py --skills-dir ~/.openclaw/skills
+```
+
+## Auto-Scan Behavior
+
+SecurityClaw watch mode scans new or changed skills automatically.
+
+- Scheduler starts watch mode at login/user session.
+- Watch mode writes report files only when findings require `review` or `quarantine`.
+- Watch mode always notifies when a **new skill** is scanned.
+
+Direct watch command:
+
+```bash
+securityclaw scan --skills-dir ~/.openclaw/skills --watch --watch-scan-on-start
+```
+
+## Reports, ELI5, and Logs
+
+All outputs are under:
 
 - `~/.openclaw/SecurityClaw_Scans`
-- naming format: `Security_Scan-(MM)-(DD)-(YYYY)-(scan number)` (example: `Security_Scan-02-06-2026-001.json`)
-- quarantine ELI5 summary: `Security_Scan-...-ELI5.md` (created when quarantine candidates exist)
 
-Optional known-safe suppression:
+### Report naming
 
-```bash
-python3 securityclaw_scan.py --skills-dir ~/.openclaw/skills --allowlist ~/.openclaw/securityclaw-allowlist.json
+- JSON: `Security_Scan-(MM)-(DD)-(YYYY)-(scan number).json`
+- Markdown: `Security_Scan-(MM)-(DD)-(YYYY)-(scan number).md`
+- ELI5 (only for quarantine candidates): `Security_Scan-(MM)-(DD)-(YYYY)-(scan number)-ELI5.md`
+
+Example:
+
+- `Security_Scan-02-06-2026-001.md`
+
+### Quarantine evidence section
+
+When quarantine candidates exist, Markdown report includes `Quarantine Evidence (4 findings each)` with proof entries (rule, file, line, context, confidence, excerpt).
+
+### Monthly scan logs
+
+- Directory: `~/.openclaw/SecurityClaw_Scans/Scan_Logs`
+- File pattern: `<Month>.log` (example: `April.log`)
+- Per-scan line format:
+
+```text
+scan completed 04-06-26 12:00:00
 ```
 
-Notification summary (Telegram/webhook/stdout):
+## Notifications
+
+Notification config path:
+
+- `~/.openclaw/securityclaw-notify.json`
+
+Template:
+
+- `skills/securityclaw-skill/references/notification.example.json`
+
+Supported channels:
+
+- `telegram`
+- `webhook`
+- `stdout`
+
+If no working notification channel is configured, SecurityClaw prints a stdout fallback message so users are still notified.
+
+## Configuration Files
+
+- Allowlist template:
+  - `skills/securityclaw-skill/references/allowlist.example.json`
+- Notification template:
+  - `skills/securityclaw-skill/references/notification.example.json`
+
+Default runtime config paths:
+
+- Allowlist: `~/.openclaw/securityclaw-allowlist.json`
+- Notifications: `~/.openclaw/securityclaw-notify.json`
+
+## How It Works (High-Level)
+
+1. Enumerate skill directories.
+2. Hash each skill for stable identity.
+3. Run context-aware static checks.
+4. Apply allowlist suppression (if configured).
+5. Compute severity, confidence, risk score, and recommendation.
+6. On `quarantine` recommendation, include 4 proof findings.
+7. Save reports (based on report mode), create ELI5 summary when needed.
+8. Send notifications.
+9. Append monthly scan log entry.
+
+## Scheduler Status and Operations
+
+### macOS (`launchd`)
+
+Check status:
 
 ```bash
-python3 securityclaw_scan.py --skills-dir ~/.openclaw/skills --notify-config ~/.openclaw/securityclaw-notify.json --notify-on quarantine
+launchctl print gui/$(id -u)/com.openclaw.securityclaw.watch
 ```
 
-Auto-scan new/changed skills:
+Restart:
 
 ```bash
-python3 securityclaw_scan.py --skills-dir ~/.openclaw/skills --watch --watch-scan-on-start
+launchctl kickstart -k gui/$(id -u)/com.openclaw.securityclaw.watch
 ```
 
-When quarantine candidates are detected, the Markdown report includes a quarantine-evidence section with 4 proof findings per skill.
-In auto-scan mode, report docs are only written when findings require review/quarantine.
-When a new skill is scanned in auto mode, notifications are always sent.
+### Linux (`systemd --user`)
 
-Monthly scan logs:
+Check status:
 
-- location: `~/.openclaw/SecurityClaw_Scans/Scan_Logs/<Month>.log`
-- line format: `scan completed 04-06-26 12:00:00`
+```bash
+systemctl --user status securityclaw-watch.service
+```
 
-## Design principles (security)
+Restart:
 
-- **Assume untrusted input**: skills, markdown, and JSON are attacker-controlled.
-- **Least privilege**: scans are read-only by default.
-- **Quarantine > delete**: deletion requires explicit owner approval.
-- **No surprises**: any install/bootstrap actions (Docker, Portainer, etc.) require **explicit owner approval**.
-- **Defense in depth**: static checks + optional sandbox/dynamic checks.
+```bash
+systemctl --user restart securityclaw-watch.service
+```
 
-## Recommended usage (best UX)
+Enable at login/session:
 
-Run SecurityClaw **via chat** (owner ↔ bot) so the bot can:
-- explain findings in plain English,
-- ask follow-up questions,
-- and present the owner action menu (**Delete / Report / Allow / Scan all**) with clear previews.
+```bash
+systemctl --user enable --now securityclaw-watch.service
+```
 
-Avoid running destructive actions from scripts without a human in the loop.
+Optional (run after logout too):
 
----
+```bash
+loginctl enable-linger $USER
+```
 
-## Lobster law 🦞
+## Troubleshooting
 
-If it can pinch your tokens, it can pinch your secrets.
+### `securityclaw: command not found`
+
+- Use one-shot install: `npx github:mallen-lbx/SecurityClaw install`
+- If globally installed, ensure npm global bin is in `PATH`.
+
+### Python not found
+
+- Install Python 3 and rerun install.
+- You can set a specific interpreter:
+
+```bash
+securityclaw install --python-bin /usr/bin/python3
+```
+
+### Linux scheduler not available
+
+- Installer will notify and print an install command.
+- Re-run installer after dependency install.
+- Manual fallback:
+
+```bash
+securityclaw scan --skills-dir ~/.openclaw/skills --watch --watch-scan-on-start
+```
+
+### No report files in auto-scan mode
+
+- This is expected when there are no `review`/`quarantine` findings.
+- Check monthly scan logs for scan activity.
+
+### No external notifications delivered
+
+- Validate `~/.openclaw/securityclaw-notify.json`.
+- Even with broken channels, stdout fallback notification is emitted.
+
+### Too many false positives
+
+- Add allowlist entries for approved skills/rules.
+- Re-scan and review `suppressedFindings` in JSON report.
+
+## Repository Layout
+
+- `skills/securityclaw-skill/` - skill package and scanner scripts
+- `skills/securityclaw-skill/scripts/securityclaw_scan.py` - core scanner
+- `skills/securityclaw-skill/scripts/install_securityclaw.py` - scheduler installer (`launchd`/`systemd`)
+- `bin/securityclaw.js` - npm CLI wrapper (`install`, `scan`)
+- `handoff/` - product/spec/prompt handoff artifacts
+- `docs/plans/` - execution plans
+
+## Continuing Development
+
+If you want to modify or extend SecurityClaw, start with the `handoff/` folder. It contains PRD/spec/prompt materials intended to help continue development with full context.
+
+## License
+
+MIT (see `LICENSE`).
